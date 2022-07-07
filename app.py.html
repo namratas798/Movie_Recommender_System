@@ -1,0 +1,83 @@
+<html>
+<head>
+<title>app.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #6a8759;}
+.s3 { color: #6897bb;}
+.s4 { color: #808080;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+app.py</font>
+</center></td></tr></table>
+<pre><span class="s0">from </span><span class="s1">typing </span><span class="s0">import </span><span class="s1">List</span><span class="s0">, </span><span class="s1">Any</span>
+
+<span class="s0">import </span><span class="s1">streamlit </span><span class="s0">as </span><span class="s1">st</span>
+<span class="s0">import </span><span class="s1">pickle</span>
+<span class="s0">import </span><span class="s1">pandas </span><span class="s0">as </span><span class="s1">pd</span>
+<span class="s0">import </span><span class="s1">requests</span>
+
+
+<span class="s0">def </span><span class="s1">fetch_poster(movie_id):</span>
+    <span class="s1">response = requests.get(</span><span class="s2">'https://api.themoviedb.org/3/movie/{}?api_key=adb179885ae67ed0ef47e140f22afc9c&amp;language=en-US'</span><span class="s1">.format(movie_id))</span>
+    <span class="s1">data = response.json()</span>
+    <span class="s0">return </span><span class="s2">&quot;https://image.tmdb.org/t/p/w500/&quot; </span><span class="s1">+ data[</span><span class="s2">'poster_path'</span><span class="s1">]</span>
+
+<span class="s0">def </span><span class="s1">recommend(movie):</span>
+    <span class="s1">movie_index = movies[movies[</span><span class="s2">'title'</span><span class="s1">] == movie].index[</span><span class="s3">0</span><span class="s1">]</span>
+    <span class="s1">distances = similarity[movie_index]</span>
+    <span class="s1">movies_list = sorted(list(enumerate(distances))</span><span class="s0">, </span><span class="s1">reverse=</span><span class="s0">True, </span><span class="s1">key=</span><span class="s0">lambda </span><span class="s1">x: x[</span><span class="s3">1</span><span class="s1">])[</span><span class="s3">1</span><span class="s1">:</span><span class="s3">6</span><span class="s1">]</span>
+
+    <span class="s1">recommended_movies = []</span>
+    <span class="s1">recommended_movies_posters = []</span>
+    <span class="s0">for </span><span class="s1">i </span><span class="s0">in </span><span class="s1">movies_list:</span>
+        <span class="s1">movie_id = movies.iloc[i[</span><span class="s3">0</span><span class="s1">]].movie_id</span>
+
+        <span class="s1">recommended_movies.append(movies.iloc[i[</span><span class="s3">0</span><span class="s1">]].title)</span>
+        <span class="s4"># fetch poster from API</span>
+        <span class="s1">recommended_movies_posters.append(fetch_poster(movie_id))</span>
+    <span class="s0">return </span><span class="s1">recommended_movies</span><span class="s0">,</span><span class="s1">recommended_movies_posters</span>
+
+<span class="s1">movies_dict = pickle.load(open(</span><span class="s2">'movie_dict.pkl'</span><span class="s0">, </span><span class="s2">'rb'</span><span class="s1">))</span>
+<span class="s4">#movies_dict = movies_dict['title'].values</span>
+<span class="s1">movies = pd.DataFrame(movies_dict)</span>
+<span class="s1">similarity = pickle.load(open(</span><span class="s2">'similarity.pkl'</span><span class="s0">, </span><span class="s2">'rb'</span><span class="s1">))</span>
+
+<span class="s1">st.title(</span><span class="s2">'Movie Recommender System'</span><span class="s1">)</span>
+
+<span class="s1">selected_movie_name = st.selectbox(</span>
+<span class="s2">'How would you like to be Contacted?'</span><span class="s0">,</span>
+<span class="s1">movies[</span><span class="s2">'title'</span><span class="s1">].values)</span>
+
+<span class="s0">if </span><span class="s1">st.button(</span><span class="s2">'Recommend'</span><span class="s1">):</span>
+    <span class="s1">names</span><span class="s0">,</span><span class="s1">posters = recommend(selected_movie_name)</span>
+    <span class="s1">col1</span><span class="s0">, </span><span class="s1">col2</span><span class="s0">, </span><span class="s1">col3</span><span class="s0">, </span><span class="s1">col4</span><span class="s0">, </span><span class="s1">col5 = st.columns(</span><span class="s3">5</span><span class="s1">)</span>
+
+    <span class="s0">with </span><span class="s1">col1:</span>
+        <span class="s1">st.text(names[</span><span class="s3">0</span><span class="s1">])</span>
+        <span class="s1">st.image(posters[</span><span class="s3">0</span><span class="s1">])</span>
+
+    <span class="s0">with </span><span class="s1">col2:</span>
+        <span class="s1">st.text(names[</span><span class="s3">1</span><span class="s1">])</span>
+        <span class="s1">st.image(posters[</span><span class="s3">1</span><span class="s1">])</span>
+
+    <span class="s0">with </span><span class="s1">col3:</span>
+        <span class="s1">st.text(names[</span><span class="s3">2</span><span class="s1">])</span>
+        <span class="s1">st.image(posters[</span><span class="s3">2</span><span class="s1">])</span>
+
+    <span class="s0">with </span><span class="s1">col4:</span>
+        <span class="s1">st.text(names[</span><span class="s3">3</span><span class="s1">])</span>
+        <span class="s1">st.image(posters[</span><span class="s3">3</span><span class="s1">])</span>
+
+    <span class="s0">with </span><span class="s1">col5:</span>
+        <span class="s1">st.text(names[</span><span class="s3">4</span><span class="s1">])</span>
+        <span class="s1">st.image(posters[</span><span class="s3">4</span><span class="s1">])</span>
+</pre>
+</body>
+</html>
